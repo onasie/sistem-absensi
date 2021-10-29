@@ -173,8 +173,7 @@ def about():
 @app.route("/register", methods=['GET', 'POST'])
 @login_required
 def register():
-    # if current_user.is_authenticated:
-    #     return redirect(url_for('home'))
+    camera.run()
     form = RegistrationForm()
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
@@ -298,7 +297,7 @@ def delete_post(post_id):
 @app.route("/r")
 def capture():
 	im = camera.get_frame(_bytes=False)
-	capture_and_save(im)
+	capture_and_save(2, im)
 	return render_template("send_to_init.html")
 
 @app.route("/images/last")
