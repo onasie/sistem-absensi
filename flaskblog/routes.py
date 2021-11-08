@@ -296,41 +296,44 @@ def delete_post(post_id):
     flash('Your post has been deleted!', 'success')
     return redirect(url_for('home'))
 
-@app.route("/r")
+@app.route("/r", methods=['POST'])
 def capture():
-	im, gray = camera.capture_frame()
-	capture_and_save(2, im, gray)
-	return render_template("send_to_init.html")
+    user = request.form.get('userSelect')
+    im, gray = camera.capture_frame()
+    capture_and_save(str(user), im, gray)
+    return render_template("send_to_init.html")
 
 @app.route("/images/last")
 def last_image():
-	p = Path("images/last.png")
-	if p.exists():
-		r = "last.png"
-	else:
-		r = "not_found.jpeg"
-	return send_from_directory("../images", r)
+    p = Path("images/last.png")
+    if p.exists():
+        r = "last.png"
+    else:
+        r = "not_found.jpeg"
+    return send_from_directory("../images", r)
 
 def gen(camera):
-	while True:
-		frame = camera.get_frame()
-		yield (b'--frame\r\n'
-			   b'Content-Type: image/png\r\n\r\n' + frame + b'\r\n')
+    while True:
+        frame = camera.get_frame()
+        yield (b'--frame\r\n'
+               b'Content-Type: image/png\r\n\r\n' + frame + b'\r\n')
 
-@app.route("/stream")
+@app.route("/stream", methods=['GET'])
 def stream():
   camera.run()
-  return render_template('stream.html', title='Stream')
+  users = User.query.all()
+  return render_template('stream.html', title='Stream', users=users)
 
 @app.route("/recognition")
 def recognition():
+  posts = Post.query.filter_by(id)
   camera.run()
   return render_template('recognition.html', title='Recognition')
 
 @app.route("/video_feed")
 def video_feed():
-	return Response(gen(camera),
-		mimetype="multipart/x-mixed-replace; boundary=frame")
+    return Response(gen(camera),
+        mimetype="multipart/x-mixed-replace; boundary=frame")
 
 # @app.route("/video_feed_recog")
 # def video_feed_recog():
