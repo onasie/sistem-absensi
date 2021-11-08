@@ -154,8 +154,10 @@ from flask_login import login_user, current_user, logout_user, login_required
 from flaskblog.capture import capture_and_save
 from flaskblog.camera import Camera
 from pathlib import Path
+# from flaskblog.recogCamera import recogCamera
 
 camera = Camera()
+# recogCamera = recogCamera()
 
 @app.route("/")
 @app.route("/home")
@@ -296,8 +298,8 @@ def delete_post(post_id):
 
 @app.route("/r")
 def capture():
-	im = camera.get_frame(_bytes=False)
-	capture_and_save(2, im)
+	im, gray = camera.capture_frame()
+	capture_and_save(2, im, gray)
 	return render_template("send_to_init.html")
 
 @app.route("/images/last")
@@ -320,7 +322,17 @@ def stream():
   camera.run()
   return render_template('stream.html', title='Stream')
 
+@app.route("/recognition")
+def recognition():
+  camera.run()
+  return render_template('recognition.html', title='Recognition')
+
 @app.route("/video_feed")
 def video_feed():
 	return Response(gen(camera),
 		mimetype="multipart/x-mixed-replace; boundary=frame")
+
+# @app.route("/video_feed_recog")
+# def video_feed_recog():
+# 	return Response(gen(recogCamera),
+# 		mimetype="multipart/x-mixed-replace; boundary=frame")

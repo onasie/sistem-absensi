@@ -1,11 +1,15 @@
 import cv2
 import datetime, time
+import numpy as np
 from pathlib import Path
 from flaskblog import db
+from flaskblog.Model import predict_embedding
 from flaskblog.models import Photo
 
-def capture_and_save(id, im):
+
+def capture_and_save(id, im, gray):
     s = im.shape
+    grayFaces = []
 
     m = 0
     direc = "images/" + str(id)
@@ -22,20 +26,39 @@ def capture_and_save(id, im):
                 print("Error reading image number for",str(imp))
     m +=1
     lp = Path(direc + "/last.png")
-    if lp.exists() and lp.is_file():
+    lpg = Path(direc + "/last_gray.png")
+    le = Path(direc + "/last_Embedding.npy")
+    if lp.exists() and lp.is_file() and lpg.exists() and lpg.is_file() and le.exists() and le.is_file():
         lastPath = direc + "/img_" + str(m) + ".png"
-        print("lastPath 1", lastPath)
-        np = Path(lastPath)
-        np.write_bytes(lp.read_bytes())
+        lastPathGray = direc + "/img_" + str(m) + "_gray.png"
+        lastEmbPath = direc + "/Embedding_" + str(m) + '.npy'
+        nps = Path(lastPath)
+        npg = Path(lastPathGray)
+        npe = Path(lastEmbPath)
+
+        print("embedding path", npe)
+
+        nps.write_bytes(lp.read_bytes())
+        npg.write_bytes(lpg.read_bytes())
+        npe.write_bytes(le.read_bytes())
     else:
         lastPath = direc + "/last.png"
-        print("lastPath 2", lastPath)
-    photo = Photo(user_id=id, path=lastPath)
+        lastPathGray = direc + "/last_gray.png"
+        lastEmbPath = direc + "/last_Embedding.npy"
+    
+    grayFaces.append(gray)
+    face_embedding = predict_embedding(grayFaces)
+    print("face_embedding", face_embedding.shape)
+
+    np.save(lastEmbPath, face_embedding)
+    photo = Photo(user_id=id, img_path=lastPath, emb_path=lastEmbPath)
     db.session.add(photo)
     db.session.commit()
-    cv2.imwrite(direc + "/last.png",im)
 
-    return lastPath
+    cv2.imwrite(direc + "/last.png",im)
+    cv2.imwrite(direc + "/last_gray.png",gray)
+
+    return lastPath, lastPathGray
 
 if __name__=="__main__":
     capture_and_save()

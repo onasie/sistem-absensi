@@ -16,7 +16,7 @@ class User(db.Model, UserMixin):
   face = db.relationship('Photo', backref='facePhotos', lazy=True)
 
   def __repr__(self):
-    return f"User('{self.username}', '{self.email}', '{self.image_file}')"
+    return f"User('{self.username}', '{self.email}', '{self.image_file}', '{self.face}')"
 
 class Post(db.Model):
   id = db.Column(db.Integer, primary_key=True)
@@ -31,7 +31,8 @@ class Post(db.Model):
 class Photo(db.Model):
   id = db.Column(db.Integer, primary_key=True)
   user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-  path = db.Column(db.String(120), nullable=False)
+  img_path = db.Column(db.String(120), nullable=False)
+  emb_path = db.Column(db.String(120), nullable=False)
 
   def __repr__(self):
-    return f"Photo('{self.user_id}', '{self.path}')"
+    return f"Photo('{self.id}','{self.user_id}', '{self.img_path}', '{self.emb_path}')"
