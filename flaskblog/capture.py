@@ -48,7 +48,6 @@ def capture_and_save(id, im, gray):
     
     grayFaces.append(gray)
     face_embedding = predict_embedding(grayFaces)
-    print("face_embedding", face_embedding.shape)
 
     np.save(lastEmbPath, face_embedding)
     photo = Photo(user_id=id, img_path=lastPath, emb_path=lastEmbPath)
@@ -57,6 +56,7 @@ def capture_and_save(id, im, gray):
 
     cv2.imwrite(direc + "/last.png",im)
     cv2.imwrite(direc + "/last_gray.png",gray)
+    np.save(lastEmbPath, face_embedding)
 
     return lastPath, lastPathGray
 

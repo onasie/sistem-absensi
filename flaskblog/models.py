@@ -16,7 +16,7 @@ class User(db.Model, UserMixin):
   face = db.relationship('Photo', backref='facePhotos', lazy=True)
 
   def __repr__(self):
-    return f"User('{self.username}', '{self.email}', '{self.image_file}', '{self.face}')"
+    return f"User('{self.username}')"
 
 class Post(db.Model):
   id = db.Column(db.Integer, primary_key=True)

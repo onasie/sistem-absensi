@@ -2,7 +2,17 @@
 {% block content %}
   <h1>Register New Account</h1>
   <img src="{{ url_for('video_feed') }}">
-  <a href="/r"><button>Take photo</button></a>
-  <img src="/images/last" style="border: 3px solid black"/>
-
+  <!-- <img src="/images/last" style="border: 3px solid black"/> -->
+  <form class="form-inline" method="POST" action="/r">
+    <div class="form-group">
+      <div class="input-group">
+        <select name=userSelect>
+          {% for user in users[1:] %}
+            <option value="{{user.id}}">{{user.username}}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit">Take photo</button>
+    </div>
+    
 {% endblock content %}
