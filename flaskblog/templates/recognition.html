@@ -1,8 +1,5 @@
 {% extends "layout.html" %}
 {% block content %}
   <h1>Recognition Account</h1>
-  <img src="{{ url_for('video_feed') }}">
-  <a href="/r"><button>Take photo</button></a>
-  <img src="/images/last" style="border: 3px solid black"/>
-
+  <img src="{{ url_for('video_feed', video_id=0) }}">
 {% endblock content %}

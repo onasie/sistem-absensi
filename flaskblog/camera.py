@@ -19,7 +19,7 @@ class Camera:
         logger.info(f"Initializing camera class with {fps} fps and video_source={video_source}")
         self.fps = fps
         self.video_source = video_source
-        self.camera = VideoStream(src=0).start()
+        # self.camera = VideoStream(src=0).start()
         # We want a max of 5s history to be stored, thats 5s*fps
         self.max_frames = 5
         self.frames = []
@@ -36,6 +36,10 @@ class Camera:
             self.isrunning = True
             thread.start()
             logger.info("Thread started")
+        else:
+            thread = threading.Thread(target=self._capture_loop,daemon=True)
+            self.isrunning = True
+            thread.start()
 
     def _capture_loop(self):
         detector= MTCNN()
@@ -43,6 +47,7 @@ class Camera:
         dt = 1/self.fps
         logger.debug("Observation started")
         while self.isrunning:
+            self.camera = VideoStream(src=0).start()
             self.image = self.camera.read()
             if len(self.frames)==self.max_frames:
                 self.frames = self.frames[1:]

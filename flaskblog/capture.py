@@ -56,7 +56,6 @@ def capture_and_save(id, im, gray):
 
     cv2.imwrite(direc + "/last.png",im)
     cv2.imwrite(direc + "/last_gray.png",gray)
-    np.save(lastEmbPath, face_embedding)
 
     return lastPath, lastPathGray
 
