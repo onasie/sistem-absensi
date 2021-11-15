@@ -1,4 +1,5 @@
 import cv2
+import re
 import threading
 import time
 import logging
@@ -52,7 +53,8 @@ class recogCamera:
         for x in Photo.query.all():
             user = User.query.get(x.user_id).username
             emb_value = np.load(x.emb_path)
-            key = user +'#Id'+ str(x.user_id) + "_Face"+ str(x.id)
+            # key = user +'#Id'+ str(x.user_id) + "_Face"+ str(x.id)
+            key = str(x.user_id)
             list_value = []
             list_value.append(emb_value[0])
             list_value.append(x.img_path)
@@ -146,9 +148,7 @@ class recogCamera:
                 p.close()
 
                 text = self.identity+ "(D = %.4f)" % self.min_dist
-                self.prediction = text
-
-                print("prediksi", self.prediction)
+                self.prediction = self.identity
 
             self.frames.append(self.image)
             time.sleep(dt)
@@ -160,11 +160,9 @@ class recogCamera:
     def get_frame(self):
         if len(self.frames)>0:
             img = cv2.imencode('.png',self.frames[-1])[1].tobytes()
-            name = self.prediction
         else:
             with open("./images/not_found.jpeg","rb") as f:
                 img = f.read()
-                name = "Unknown"
         return img
 
     def get_name(self):

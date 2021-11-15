@@ -4,7 +4,7 @@ from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, abort, Response, send_from_directory
 from flaskblog import app, db, bcrypt
 from flaskblog.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm
-from flaskblog.models import User, Post
+from flaskblog.models import User, Post, Presence
 from flask_login import login_user, current_user, logout_user, login_required
 from flaskblog.capture import capture_and_save
 from flaskblog.camera import Camera
@@ -17,18 +17,30 @@ recog_Camera = recogCamera()
 @app.route("/")
 @app.route("/home")
 def home():
-    posts = Post.query.all()
+    recog_Camera.stop()
+    camera.stop()
+    presences = Presence.query.all()
+    return render_template('home.html', presences=presences)
+
+@app.route("/user")
+def user():
+    recog_Camera.stop()
+    camera.stop()
     users = User.query.all()
-    return render_template('home.html', posts=posts, users=users)
+    return render_template('user.html', users=users)
 
 @app.route("/about")
 @login_required
 def about():
+    recog_Camera.stop()
+    camera.stop()
     return render_template('face_recognition.html', title='About')
 
 @app.route("/register", methods=['GET', 'POST'])
 @login_required
 def register():
+    recog_Camera.stop()
+    camera.stop()
     form = RegistrationForm()
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
@@ -43,6 +55,8 @@ def register():
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
+    recog_Camera.stop()
+    camera.stop()
     if current_user.is_authenticated:
         return redirect(url_for('home'))
     form = LoginForm()
@@ -59,6 +73,8 @@ def login():
 
 @app.route("/logout")
 def logout():
+    recog_Camera.stop()
+    camera.stop()
     logout_user()
     return redirect(('home'))
 
@@ -80,6 +96,8 @@ def save_picture(form_picture):
 @app.route("/settings", methods=['GET', 'POST'])
 @login_required
 def settings():
+    recog_Camera.stop()
+    camera.stop()
     form = UpdateAccountForm()
     if form.validate_on_submit():
         if form.picture.data:
@@ -101,6 +119,8 @@ def settings():
 @app.route("/post/new", methods=['GET', 'POST'])
 @login_required
 def new_post():
+    recog_Camera.stop()
+    camera.stop()
     form = PostForm()
     if form.validate_on_submit():
         post = Post(title=form.title.data, content=form.content.data, author=current_user)
@@ -114,6 +134,8 @@ def new_post():
 
 @app.route("/post/<int:post_id>")
 def post(post_id):
+    recog_Camera.stop()
+    camera.stop()
     post = Post.query.get_or_404(post_id)
     return render_template('post.html', title=post.title, post=post)
 
@@ -121,6 +143,8 @@ def post(post_id):
 @app.route("/post/<int:post_id>/update", methods=['GET', 'POST'])
 @login_required
 def update_post(post_id):
+    recog_Camera.stop()
+    camera.stop()
     post = Post.query.get_or_404(post_id)
     if post.author != current_user:
         abort(403)
@@ -141,6 +165,8 @@ def update_post(post_id):
 @app.route("/post/<int:post_id>/delete", methods=['POST'])
 @login_required
 def delete_post(post_id):
+    recog_Camera.stop()
+    camera.stop()
     post = Post.query.get_or_404(post_id)
     if post.author != current_user:
         abort(403)
@@ -207,3 +233,20 @@ def content():
             print("name in route", name)
             yield (name)
     return Response(inner(), mimetype='text/html')
+
+@app.route("/presence", methods=['GET', 'POST'])
+@login_required
+def new_presencing():
+    id = recog_Camera.get_name()
+
+    if id != "Unknown":
+        user = User.query.get_or_404(id)
+        if user == current_user or current_user.username == "admin":
+            presence = Presence(user_id=id)
+            db.session.add(presence)
+            db.session.commit()
+            flash('Selamat! Kamu berhasil absen!', 'success')
+        else:
+            flash('Kamu absen dengan Akun yang salah!', 'danger')
+        return redirect(url_for('home'))
+    return render_template("send_to_init_recog.html")

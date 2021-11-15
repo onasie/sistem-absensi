@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+{% block content %}
+  <h1>Daftar Pengguna</h1>
+  <br>
+  {% for user in users %}
+    <article class="media content-section">
+      <div class="media-body">
+        <div class="article-metadata">
+          <img class="rounded-circle article-img" src="{{ url_for('static', filename='profile_pics/' + user.image_file) }}">
+          <a class="mr-2" href="#">{{ user.username }}</a>
+          <small class="text-muted">{{ user.email }}</small>
+        </div>
+      </div>
+    </article>
+  {% endfor %}
+{% endblock content %}
