@@ -55,7 +55,6 @@ class Camera:
     
     def predict(self, model, images):
         embedding = []
-        print("img1 before", images.shape)
         for i in range(0, images.shape[0]):
             img1 = np.expand_dims(images[i],axis=0)
             a = model.predict(img1)

@@ -1,8 +1,8 @@
 {% extends "layout.html" %}
 {% block content %}
-  <h1>Register New Account</h1>
-  <img src="{{ url_for('video_feed') }}">
-  <!-- <img src="/images/last" style="border: 3px solid black"/> -->
+  <h1>Register Pengguna Baru</h1>
+  <br>
+  <img src="{{ url_for('video_feed', video_id=1) }}">
   <form class="form-inline" method="POST" action="/r">
     <div class="form-group">
       <div class="input-group">
@@ -14,5 +14,5 @@
       </div>
       <button type="submit">Take photo</button>
     </div>
-    
+  </form>
 {% endblock content %}

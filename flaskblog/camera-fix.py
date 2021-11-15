@@ -19,7 +19,6 @@ class Camera:
         logger.info(f"Initializing camera class with {fps} fps and video_source={video_source}")
         self.fps = fps
         self.video_source = video_source
-        self.camera = VideoStream(src=0).start()
         # We want a max of 5s history to be stored, thats 5s*fps
         self.max_frames = 5
         self.frames = []
@@ -36,6 +35,7 @@ class Camera:
             self.isrunning = True
             thread.start()
             logger.info("Thread started")
+            self.camera = VideoStream(src=0).start()
 
     def _capture_loop(self):
         detector= MTCNN()
@@ -46,8 +46,6 @@ class Camera:
             self.image = self.camera.read()
             if len(self.frames)==self.max_frames:
                 self.frames = self.frames[1:]
-            # self.frames = imutils.resize(self.frames, width=500, height=500)
-            # image = cv2.cvtColor(self.frames, cv2.COLOR_BGR2RGB)
             result = detector.detect_faces(self.image)
 
             if result != []:
