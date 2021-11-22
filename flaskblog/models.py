@@ -1,6 +1,12 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from flaskblog import db, login_manager
 from flask_login import UserMixin
+import pytz
+
+now_utc = datetime.utcnow()
+tz = pytz.timezone('Asia/Jakarta')
+now_kl = now_utc.replace(tzinfo=pytz.utc).astimezone(tz)
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -22,7 +28,7 @@ class User(db.Model, UserMixin):
 class Post(db.Model):
   id = db.Column(db.Integer, primary_key=True)
   title = db.Column(db.String(100), nullable=False)
-  date_posted = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+  date_posted = db.Column(db.DateTime, nullable=False, default=now_kl)
   content = db.Column(db.Text, nullable=False)
   user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
@@ -41,7 +47,7 @@ class Photo(db.Model):
 class Presence(db.Model):
   id = db.Column(db.Integer, primary_key=True)
   user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-  date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+  date = db.Column(db.DateTime, nullable=False, default=now_kl)
 
   def __repr__(self):
     return f"Presencing('{self.id}', '{self.user_id}', '{self.date}')"

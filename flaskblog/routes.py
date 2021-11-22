@@ -19,7 +19,14 @@ recog_Camera = recogCamera()
 def home():
     recog_Camera.stop()
     camera.stop()
-    presences = Presence.query.all()
+    presences = []
+    try:
+        if current_user.username == "admin":
+            presences = Presence.query.all()
+        else:
+            presences = current_user.presence
+    except:
+        pass
     return render_template('home.html', presences=presences)
 
 @app.route("/user")
