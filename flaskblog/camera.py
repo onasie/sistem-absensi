@@ -2,12 +2,9 @@ import cv2
 import threading
 import time
 import logging
-import numpy as np
 from mtcnn.mtcnn import MTCNN
-import imutils
-from imutils.video import VideoStream, FPS, WebcamVideoStream
+from imutils.video import VideoStream
 import threading
-from threading import Thread
 from keras.preprocessing.image import img_to_array
 
 logger = logging.getLogger(__name__)

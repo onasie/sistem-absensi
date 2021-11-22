@@ -1,11 +1,9 @@
 import cv2
-import datetime, time
 import numpy as np
 from pathlib import Path
 from flaskblog import db
 from flaskblog.Model import predict_embedding
 from flaskblog.models import Photo
-
 
 def capture_and_save(id, im, gray):
     s = im.shape
@@ -35,8 +33,6 @@ def capture_and_save(id, im, gray):
         nps = Path(lastPath)
         npg = Path(lastPathGray)
         npe = Path(lastEmbPath)
-
-        print("embedding path", npe)
 
         nps.write_bytes(lp.read_bytes())
         npg.write_bytes(lpg.read_bytes())

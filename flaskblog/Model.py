@@ -1,5 +1,5 @@
 from keras.models import load_model
-from keras.layers import Input,Lambda, Dense, Conv2D, MaxPooling2D, Flatten, Dropout, concatenate
+from keras.layers import Input,Lambda, Dense, Conv2D, MaxPooling2D, Flatten, Dropout
 from keras.models import Model, Sequential
 from tensorflow.keras.optimizers import RMSprop
 from keras import backend as K

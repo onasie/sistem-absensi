@@ -6,7 +6,6 @@ import logging
 from mtcnn.mtcnn import MTCNN
 from imutils.video import VideoStream
 import threading
-
 from flaskblog.models import Photo, User
 from flaskblog.Model import *
 from keras.preprocessing.image import img_to_array
@@ -17,7 +16,7 @@ import sys
 logger = logging.getLogger(__name__)
 thread = None
 
-class recogCamera:
+class cameraRecog:
     def __init__(self,fps=20,video_source=0):
         logger.info(f"Initializing camera class with {fps} fps and video_source={video_source}")
         self.fps = fps

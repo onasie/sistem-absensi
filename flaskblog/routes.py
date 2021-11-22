@@ -1,23 +1,20 @@
-from logging import NullHandler
 import os
 import secrets
 from PIL import Image
-from flask import render_template, url_for, flash, redirect, request, abort, Response, send_from_directory
+from flask import render_template, url_for, flash, redirect, request, Response, send_from_directory
 from flaskblog import app, db, bcrypt
-from flaskblog.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm
-from flaskblog.models import User, Post, Presence
+from flaskblog.forms import RegistrationForm, LoginForm, UpdateAccountForm
+from flaskblog.models import User, Presence
 from flask_login import login_user, current_user, logout_user, login_required
 from flaskblog.capture import capture_and_save
 from flaskblog.camera import Camera
 from pathlib import Path
-from flaskblog.recogCamera import recogCamera
+from flaskblog.cameraRecog import cameraRecog
 import pytz
 from datetime import datetime
 
 camera = Camera()
-recog_Camera = recogCamera()
-
-
+recog_Camera = cameraRecog()
 
 @app.route("/")
 @app.route("/home")
@@ -40,13 +37,6 @@ def user():
     camera.stop()
     users = User.query.all()
     return render_template('user.html', users=users)
-
-@app.route("/about")
-@login_required
-def about():
-    recog_Camera.stop()
-    camera.stop()
-    return render_template('face_recognition.html', title='About')
 
 @app.route("/register", methods=['GET', 'POST'])
 @login_required
@@ -104,7 +94,6 @@ def save_picture(form_picture):
 
     return picture_fn
 
-
 @app.route("/settings", methods=['GET', 'POST'])
 @login_required
 def settings():
@@ -127,72 +116,14 @@ def settings():
     return render_template('settings.html', title='Account Settings',
                            image_file=image_file, form=form)
 
-
-@app.route("/post/new", methods=['GET', 'POST'])
-@login_required
-def new_post():
-    recog_Camera.stop()
-    camera.stop()
-    form = PostForm()
-    if form.validate_on_submit():
-        post = Post(title=form.title.data, content=form.content.data, author=current_user)
-        db.session.add(post)
-        db.session.commit()
-        flash('Your post has been created!', 'success')
-        return redirect(url_for('home'))
-    return render_template('create_post.html', title='New Post',
-                           form=form, legend='New Post')
-
-
-@app.route("/post/<int:post_id>")
-def post(post_id):
-    recog_Camera.stop()
-    camera.stop()
-    post = Post.query.get_or_404(post_id)
-    return render_template('post.html', title=post.title, post=post)
-
-
-@app.route("/post/<int:post_id>/update", methods=['GET', 'POST'])
-@login_required
-def update_post(post_id):
-    recog_Camera.stop()
-    camera.stop()
-    post = Post.query.get_or_404(post_id)
-    if post.author != current_user:
-        abort(403)
-    form = PostForm()
-    if form.validate_on_submit():
-        post.title = form.title.data
-        post.content = form.content.data
-        db.session.commit()
-        flash('Your post has been updated!', 'success')
-        return redirect(url_for('post', post_id=post.id))
-    elif request.method == 'GET':
-        form.title.data = post.title
-        form.content.data = post.content
-    return render_template('create_post.html', title='Update Post',
-                           form=form, legend='Update Post')
-
-
-@app.route("/post/<int:post_id>/delete", methods=['POST'])
-@login_required
-def delete_post(post_id):
-    recog_Camera.stop()
-    camera.stop()
-    post = Post.query.get_or_404(post_id)
-    if post.author != current_user:
-        abort(403)
-    db.session.delete(post)
-    db.session.commit()
-    flash('Your post has been deleted!', 'success')
-    return redirect(url_for('home'))
-
 @app.route("/r", methods=['POST'])
 def capture():
     user = request.form.get('userSelect')
     im, gray = camera.capture_frame()
     capture_and_save(str(user), im, gray)
-    return render_template("send_to_init.html")
+    user = User.query.get_or_404(str(user))
+    flash('Berhasil mengambil wajah ' + user.username + '! Perhatikan ulang nama yang dipilih jika ingin melakukan pendaftaran lagi!', 'success')
+    return redirect(url_for('stream'))
 
 @app.route("/images/last")
 def last_image():
@@ -208,11 +139,9 @@ def gen(cam):
         frame = cam.get_frame()
         if cam is recog_Camera:
             name = cam.get_name()
-            print("name", name)
 
         yield (b'--frame\r\n'
                b'Content-Type: image/png\r\n\r\n' + frame + b'\r\n')
-        # yield(name)
 
 @app.route("/stream", methods=['GET'])
 def stream():
@@ -223,7 +152,6 @@ def stream():
 
 @app.route("/recognition")
 def recognition():
-  # posts = Post.query.filter_by(id)
   camera.stop()
   recog_Camera.run()
   return render_template('recognition.html', title='Recognition')
@@ -236,14 +164,6 @@ def video_feed(video_id):
       cam = recog_Camera
     return Response(gen(cam),
         mimetype="multipart/x-mixed-replace; boundary=frame")
-
-@app.route("/content")
-def content():
-    def inner():
-        while True:
-            name = recog_Camera.get_name()
-            yield (name)
-    return Response(inner(), mimetype='text/html')
 
 @app.route("/presence", methods=['GET', 'POST'])
 @login_required
@@ -264,19 +184,19 @@ def new_presencing():
                     presence.dateOut = now_kl
                     presence.status = 'Keluar'
                     db.session.commit()
-                    flash('Selamat! Kamu berhasil absen keluar!', 'success')
+                    flash('Selamat! ' + user.username + ' berhasil absen keluar!', 'success')
                 else:
                     presence = Presence(user_id=id, dateIn=now_kl)
                     db.session.add(presence)
                     db.session.commit()
-                    flash('Selamat! Kamu berhasil absen masuk!', 'success')
+                    flash('Selamat! ' + user.username + ' berhasil absen masuk!', 'success')
             else:
                 presence = Presence(user_id=id, dateIn=now_kl)
                 db.session.add(presence)
                 db.session.commit()
-                flash('Selamat! Kamu berhasil absen masuk!', 'success')
+                flash('Selamat! ' + user.username + ' berhasil absen masuk!', 'success')
         else:
-            flash('Kamu absen dengan Akun yang salah!', 'danger')
+            flash(user.username + ' absen dengan Akun yang salah!', 'danger')
         return redirect(url_for('home'))
     flash('Absensi Gagal! Silahkan Ulangi Absensi!', 'danger')
     return redirect(url_for('recognition'))
