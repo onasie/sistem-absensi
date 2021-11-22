@@ -1,4 +1,6 @@
 from datetime import datetime, timezone
+
+from werkzeug.local import F
 from flaskblog import db, login_manager
 from flask_login import UserMixin
 import pytz
@@ -20,7 +22,7 @@ class User(db.Model, UserMixin):
   password = db.Column(db.String(60), nullable=False)
   posts = db.relationship('Post', backref='author', lazy=True)
   face = db.relationship('Photo', backref='facePhotos', lazy=True)
-  presence = db.relationship('Presence', backref="presencing", lazy=True)
+  presence = db.relationship('Presence', backref="presencing", lazy="dynamic")
 
   def __repr__(self):
     return f"User('{self.id}','{self.username}', '{self.face}')"
@@ -47,7 +49,9 @@ class Photo(db.Model):
 class Presence(db.Model):
   id = db.Column(db.Integer, primary_key=True)
   user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-  date = db.Column(db.DateTime, nullable=False, default=now_kl)
+  status = db.Column(db.Text, nullable=False, default="Masuk")
+  dateIn = db.Column(db.DateTime, nullable=False)
+  dateOut = db.Column(db.DateTime, nullable=True)
 
   def __repr__(self):
-    return f"Presencing('{self.id}', '{self.user_id}', '{self.date}')"
+    return f"Presencing('{self.id}', '{self.user_id}', '{self.status}','{self.dateIn}', '{self.dateOut}')"

@@ -1,3 +1,4 @@
+from logging import NullHandler
 import os
 import secrets
 from PIL import Image
@@ -10,9 +11,13 @@ from flaskblog.capture import capture_and_save
 from flaskblog.camera import Camera
 from pathlib import Path
 from flaskblog.recogCamera import recogCamera
+import pytz
+from datetime import datetime
 
 camera = Camera()
 recog_Camera = recogCamera()
+
+
 
 @app.route("/")
 @app.route("/home")
@@ -237,7 +242,6 @@ def content():
     def inner():
         while True:
             name = recog_Camera.get_name()
-            print("name in route", name)
             yield (name)
     return Response(inner(), mimetype='text/html')
 
@@ -248,12 +252,31 @@ def new_presencing():
 
     if id != "Unknown":
         user = User.query.get_or_404(id)
+        userPresence = user.presence
+        lastPresence = userPresence.order_by(None).order_by(Presence.id.desc()).first()
         if user == current_user or current_user.username == "admin":
-            presence = Presence(user_id=id)
-            db.session.add(presence)
-            db.session.commit()
-            flash('Selamat! Kamu berhasil absen!', 'success')
+            now_utc = datetime.utcnow()
+            tz = pytz.timezone('Asia/Jakarta')
+            now_kl = now_utc.replace(tzinfo=pytz.utc).astimezone(tz)
+            if lastPresence:
+                if lastPresence.status == "Masuk" and lastPresence.dateIn.strftime("%d-%m-%Y") == now_kl.strftime("%d-%m-%Y"):
+                    presence = Presence.query.get_or_404(lastPresence.id)
+                    presence.dateOut = now_kl
+                    presence.status = 'Keluar'
+                    db.session.commit()
+                    flash('Selamat! Kamu berhasil absen keluar!', 'success')
+                else:
+                    presence = Presence(user_id=id, dateIn=now_kl)
+                    db.session.add(presence)
+                    db.session.commit()
+                    flash('Selamat! Kamu berhasil absen masuk!', 'success')
+            else:
+                presence = Presence(user_id=id, dateIn=now_kl)
+                db.session.add(presence)
+                db.session.commit()
+                flash('Selamat! Kamu berhasil absen masuk!', 'success')
         else:
             flash('Kamu absen dengan Akun yang salah!', 'danger')
         return redirect(url_for('home'))
-    return render_template("send_to_init_recog.html")
+    flash('Absensi Gagal! Silahkan Ulangi Absensi!', 'danger')
+    return redirect(url_for('recognition'))
