@@ -1,5 +1,5 @@
 from datetime import datetime
-from werkzeug.local import F
+# from werkzeug.local import F
 from flaskblog import db, login_manager
 from flask_login import UserMixin
 import pytz
